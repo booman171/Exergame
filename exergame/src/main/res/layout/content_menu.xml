@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<android.support.constraint.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    app:layout_behavior="@string/appbar_scrolling_view_behavior"
+    tools:context=".Menu"
+    tools:showIn="@layout/activity_menu">
+
+    <Button
+        android:id="@+id/startMyo"
+        android:layout_width="259dp"
+        android:layout_height="69dp"
+        android:layout_marginBottom="36dp"
+        android:text="Myo"
+        app:layout_constraintBottom_toTopOf="@+id/startNeuroSky"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.5"
+        app:layout_constraintStart_toStartOf="parent" />
+
+    <Button
+        android:id="@+id/startNeuroSky"
+        android:layout_width="259dp"
+        android:layout_height="69dp"
+        android:layout_marginBottom="128dp"
+        android:text="Metawear + Mindwave"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent" />
+
+    <Button
+        android:id="@+id/startMetaWear"
+        android:layout_width="265dp"
+        android:layout_height="69dp"
+        android:layout_marginBottom="36dp"
+        android:text="MetaWear"
+        app:layout_constraintBottom_toTopOf="@+id/startMyo"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.5"
+        app:layout_constraintStart_toStartOf="parent" />
+</android.support.constraint.ConstraintLayout>

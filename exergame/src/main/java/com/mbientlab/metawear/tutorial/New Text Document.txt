@@ -1,0 +1,640 @@
+// Gyroscope Stream
+           gyroscope.angularVelocity().addRouteAsync(new RouteBuilder() {
+               @Override
+               public void configure(RouteComponent source) {
+                   source.stream(new Subscriber() {
+                       @Override
+                       public void apply(Data data, Object... env) {
+                           //Log.i(LOG_TAG, "rrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrr" + data.value(AngularVelocity.class).toString());
+                           //CSV CODE
+                           String gyro_entry = String.format("Gyro, %s", data.value(AngularVelocity.class).toString().replaceAll("\\(","").replaceAll("\\)",""));
+                           String csv_gyro_entry = "Gyro,"
+                                   + String.valueOf(data.value(AngularVelocity.class).x()) + ","
+                                   + String.valueOf(data.value(AngularVelocity.class).y()) + ","
+                                   + String.valueOf(data.value(AngularVelocity.class).z());
+                           csv_gyro_entry.replaceAll("\\(","").replaceAll("\\)","");
+                           //OutputStream out;
+                           try {
+
+                               outGyro = new BufferedOutputStream(new FileOutputStream(pathGyro, true));
+                               //Log.e(LOG_TAG, "CSV Created");
+                               //out.write(value.x(),);
+                               outGyro.write(csv_gyro_entry.getBytes());
+                               outGyro.write("\n".getBytes());
+                               outGyro.close();
+                           } catch (Exception e) {
+                               Log.e(LOG_TAG, "CSV creation error", e);
+                           }
+                       }
+                   });
+               }
+           }).continueWith(new Continuation<Route, Void>() {
+               @Override
+               public Void then(Task<Route> task) throws Exception {
+                   gyroscope.angularVelocity().start();
+                   gyroscope.start();
+                   return null;
+               }
+           });
+
+           // Magnetometer Stream
+           magnetometer.magneticField().addRouteAsync(new RouteBuilder() {
+               @Override
+               public void configure(RouteComponent source) {
+                   source.stream(new Subscriber() {
+                       @Override
+                       public void apply(Data data, Object... env) {
+                           //Log.i(LOG_TAG, "mmmmmmmmmmmmmmmmmmmmmmmmmmm" + data.value(MagneticField.class).toString());
+                           //CSV CODE
+                           String orient_entry = String.format("Gyro, %s", data.value(MagneticField.class).toString().replaceAll("\\(","").replaceAll("\\)",""));
+                           String csv_orient_entry = "Orientation,"
+                                   + String.valueOf(data.value(MagneticField.class).x()) + ","
+                                   + String.valueOf(data.value(MagneticField.class).y()) + ","
+                                   + String.valueOf(data.value(MagneticField.class).z());
+                           csv_orient_entry.replaceAll("\\(","").replaceAll("\\)","");
+                           // out;
+                           try {
+                               outOrient = new BufferedOutputStream(new FileOutputStream(pathOrient, true));
+                               outOrient.write(csv_orient_entry.getBytes());
+                               outOrient.write("\n".getBytes());
+                               outOrient.close();
+                           } catch (Exception e) {
+                               Log.e(LOG_TAG, "CSV creation error", e);
+                           }
+                       }
+                   });
+               }
+           }).continueWith(new Continuation<Route, Void>() {
+               @Override
+               public Void then(Task<Route> task) throws Exception {
+                   magnetometer.magneticField().start();
+                   magnetometer.start();
+                   return null;
+               }
+           });
+
+           // GPIO Stream
+           adc.addRouteAsync(new RouteBuilder() {
+               @Override
+               public void configure(RouteComponent source) {
+                   source.stream(new Subscriber() {
+                       @Override
+                       public void apply(Data data, Object ... env) {
+                           //Log.i(LOG_TAG, "adc = " + data.value(Short.class));
+                           //CSV CODE
+                           String gpio_entry = String.format("Gpio, %s", data.value(Short.class).toString().replaceAll("\\(","").replaceAll("\\)",""));
+                           String csv_gpio_entry = "Gpio," + String.valueOf(data.value(Short.class));
+                           csv_gpio_entry.replaceAll("\\(","").replaceAll("\\)","");
+                           OutputStream out;
+                           try {
+                               outGpio = new BufferedOutputStream(new FileOutputStream(pathGpio, true));
+                               //Log.e(LOG_TAG, "CSV Created");
+                               //out.write(value.x(),);
+                               outGpio.write(csv_gpio_entry.getBytes());
+                               outGpio.write("\n".getBytes());
+                               outGpio.close();
+                           } catch (Exception e) {
+                               Log.e(LOG_TAG, "CSV creation error", e);
+                           }
+                       }
+                   });
+               }
+           }).continueWithTask(task -> {
+               return timer.scheduleAsync(100, false, adc::read);
+           }).continueWith(task -> {
+               scheduledTask = task.getResult();
+               scheduledTask.start();
+               return null;
+           });
+
+
+
+
+           class DataCollector : public myo::DeviceListener {
+           public:
+               DataCollector()
+               {
+                   openFiles();
+               }
+
+               void openFiles() {
+                   time_t timestamp = std::time(0);
+
+                   // Open file for EMG log
+                   if (emgFile.is_open()) {
+                       emgFile.close();
+                   }
+                   std::ostringstream emgFileString;
+                   emgFileString << "emg-" << timestamp << ".csv";
+                   emgFile.open(emgFileString.str(), std::ios::out);
+                   emgFile << "timestamp,emg1,emg2,emg3,emg4,emg5,emg6,emg7,emg8" << std::endl;
+
+                   // Open file for gyroscope log
+                   if (gyroFile.is_open()) {
+                       gyroFile.close();
+                   }
+                   std::ostringstream gyroFileString;
+                   gyroFileString << "gyro-" << timestamp << ".csv";
+                   gyroFile.open(gyroFileString.str(), std::ios::out);
+                   gyroFile << "timestamp,x,y,z" << std::endl;
+
+                   // Open file for accelerometer log
+                   if (accelerometerFile.is_open()) {
+                       accelerometerFile.close();
+                   }
+                   std::ostringstream accelerometerFileString;
+                   accelerometerFileString << "accelerometer-" << timestamp << ".csv";
+                   accelerometerFile.open(accelerometerFileString.str(), std::ios::out);
+                   accelerometerFile << "timestamp,x,y,z" << std::endl;
+
+                   // Open file for orientation log
+                   if (orientationFile.is_open()) {
+                       orientationFile.close();
+                   }
+                   std::ostringstream orientationFileString;
+                   orientationFileString << "orientation-" << timestamp << ".csv";
+                   orientationFile.open(orientationFileString.str(), std::ios::out);
+                   orientationFile << "timestamp,x,y,z,w" << std::endl;
+
+                   // Open file for orientation (Euler angles) log
+                   if (orientationEulerFile.is_open()) {
+                       orientationEulerFile.close();
+                   }
+                   std::ostringstream orientationEulerFileString;
+                   orientationEulerFileString << "orientationEuler-" << timestamp << ".csv";
+                   orientationEulerFile.open(orientationEulerFileString.str(), std::ios::out);
+                   orientationEulerFile << "timestamp,roll,pitch,yaw" << std::endl;
+
+               }
+
+               // onEmgData() is called whenever a paired Myo has provided new EMG data, and EMG streaming is enabled.
+               void onEmgData(myo::Myo* myo, uint64_t timestamp, const int8_t* emg)
+               {
+
+                   emgFile << timestamp;
+                   for (size_t i = 0; i < 8; i++) {
+                       emgFile << ',' << static_cast<int>(emg[i]);
+
+                   }
+                   emgFile << std::endl;
+               }
+
+               // onOrientationData is called whenever new orientation data is provided
+               // Be warned: This will not make any distiction between data from other Myo armbands
+               void onOrientationData(myo::Myo *myo, uint64_t timestamp, const myo::Quaternion< float > &rotation) {
+                   orientationFile << timestamp
+                       << ',' << rotation.x()
+                       << ',' << rotation.y()
+                       << ',' << rotation.z()
+                       << ',' << rotation.w()
+                       << std::endl;
+
+                   using std::atan2;
+                   using std::asin;
+                   using std::sqrt;
+                   using std::max;
+                   using std::min;
+
+                   // Calculate Euler angles (roll, pitch, and yaw) from the unit quaternion.
+                   float roll = atan2(2.0f * (rotation.w() * rotation.x() + rotation.y() * rotation.z()),
+                       1.0f - 2.0f * (rotation.x() * rotation.x() + rotation.y() * rotation.y()));
+                   float pitch = asin(max(-1.0f, min(1.0f, 2.0f * (rotation.w() * rotation.y() - rotation.z() * rotation.x()))));
+                   float yaw = atan2(2.0f * (rotation.w() * rotation.z() + rotation.x() * rotation.y()),
+                       1.0f - 2.0f * (rotation.y() * rotation.y() + rotation.z() * rotation.z()));
+
+                   orientationEulerFile << timestamp
+                       << ',' << roll
+                       << ',' << pitch
+                       << ',' << yaw
+                       << std::endl;
+               }
+
+               // onAccelerometerData is called whenever new acceleromenter data is provided
+               // Be warned: This will not make any distiction between data from other Myo armbands
+               void onAccelerometerData(myo::Myo *myo, uint64_t timestamp, const myo::Vector3< float > &accel) {
+
+                   printVector(accelerometerFile, timestamp, accel);
+
+               }
+
+               // onGyroscopeData is called whenever new gyroscope data is provided
+               // Be warned: This will not make any distiction between data from other Myo armbands
+               void onGyroscopeData(myo::Myo *myo, uint64_t timestamp, const myo::Vector3< float > &gyro) {
+                   printVector(gyroFile, timestamp, gyro);
+
+               }
+
+               void onConnect(myo::Myo *myo, uint64_t timestamp, myo::FirmwareVersion firmwareVersion) {
+                   //Reneable streaming
+                   myo->setStreamEmg(myo::Myo::streamEmgEnabled);
+                   openFiles();
+               }
+
+               // Helper to print out accelerometer and gyroscope vectors
+               void printVector(std::ofstream &file, uint64_t timestamp, const myo::Vector3< float > &vector) {
+                   file << timestamp
+                       << ',' << vector.x()
+                       << ',' << vector.y()
+                       << ',' << vector.z()
+                       << std::endl;
+               }
+
+               // The files we are logging to
+               std::ofstream emgFile;
+               std::ofstream gyroFile;
+               std::ofstream orientationFile;
+               std::ofstream orientationEulerFile;
+               std::ofstream accelerometerFile;
+
+           };
+
+           int main(int argc, char** argv)
+           {
+               // We catch any exceptions that might occur below -- see the catch statement for more details.
+               try {
+
+               // First, we create a Hub with our application identifier. Be sure not to use the com.example namespace when
+               // publishing your application. The Hub provides access to one or more Myos.
+               myo::Hub hub("com.undercoveryeti.myo-data-capture");
+
+               std::cout << "Attempting to find a Myo..." << std::endl;
+
+               // Next, we attempt to find a Myo to use. If a Myo is already paired in Myo Connect, this will return that Myo
+               // immediately.
+               // waitForMyo() takes a timeout value in milliseconds. In this case we will try to find a Myo for 10 seconds, and
+               // if that fails, the function will return a null pointer.
+               myo::Myo* myo = hub.waitForMyo(10000);
+
+               // If waitForMyo() returned a null pointer, we failed to find a Myo, so exit with an error message.
+               if (!myo) {
+                   throw std::runtime_error("Unable to find a Myo!");
+               }
+
+               // We've found a Myo.
+               std::cout << "Connected to a Myo armband! Logging to the file system. Check the folder this appliation lives in." << std::endl << std::endl;
+
+               // Next we enable EMG streaming on the found Myo.
+               myo->setStreamEmg(myo::Myo::streamEmgEnabled);
+
+               // Next we construct an instance of our DeviceListener, so that we can register it with the Hub.
+               DataCollector collector;
+
+               // Hub::addListener() takes the address of any object whose class inherits from DeviceListener, and will cause
+               // Hub::run() to send events to all registered device listeners.
+               hub.addListener(&collector);
+
+               // Finally we enter our main loop.
+               while (1) {
+                   // In each iteration of our main loop, we run the Myo event loop for a set number of milliseconds.
+                   // In this case, we wish to update our display 50 times a second, so we run for 1000/20 milliseconds.
+                   hub.run(1);
+               }
+
+               // If a standard exception occurred, we print out its message and exit.
+               } catch (const std::exception& e) {
+                   std::cerr << "Error: " << e.what() << std::endl;
+                   std::cerr << "Press enter to continue.";
+                   std::cin.ignore();
+                   return 1;
+               }
+           }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+           if (x.size() == N_SAMPLES && y.size() == N_SAMPLES && z.size() == N_SAMPLES) {
+                                                               //pushUp.setText("dfGG");
+                                                               int push = 0;
+                                                               List<Float> accel = new ArrayList<>();
+                                                               //Log.i(LOG_TAG, "           Size of x: ");
+                                                               accel.addAll(x);
+                                                               accel.addAll(y);
+                                                               accel.addAll(z);
+                                                               data_array = toFloatArray(accel);
+                                                               float[] data_array = toFloatArray(accel);
+
+                                                               //Log.i(LOG_TAG, "fegvfrev      " + Arrays.toString(toFloatArray(accel)));
+
+                                                               results = classifier.predictProbabilities(data_array);
+                                                               //Log.i(LOG_TAG, Float.toString(round(results[2], 2)));
+                                                               /*sensorMsg(Float.toString(round(results[0], 2)), "benchPress");
+                                                               sensorMsg(Float.toString(round(results[1], 2)), "curl");
+                                                               sensorMsg(Float.toString(round(results[2], 2)), "latRaise");
+                                                               sensorMsg(Float.toString(round(results[3], 2)), "pushUp");
+                                                               sensorMsg(Float.toString(round(results[4], 2)), "triExt");
+                                                               if(round(results[2], 2) > 0.65)
+                                                                   push++;
+                                                               Log.i(LOG_TAG, "Push: " + push);
+                                                               Log.i(LOG_TAG, "It Works!");*/
+
+                                                               x.clear();
+                                                               y.clear();
+                                                               z.clear();
+                                                               accel.clear();
+                                                           }
+                                                           //OutputStream out;
+                                                           try {
+                                                               outAccel = new BufferedOutputStream(new FileOutputStream(pathAccel, true));
+                                                               //out.write(value.x(),);
+                                                               outAccel.write(csv_accel_entry.getBytes());
+                                                               outAccel.write("\n".getBytes());
+                                                               outAccel.close();
+                                                           } catch (Exception e) {
+                                                               Log.e(LOG_TAG, "CSV creation error", e);
+                                                           }
+                                                           //Log.i(LOG_TAG, "Accel: " + accel.size());*/
+
+
+
+
+
+
+
+
+
+
+
+     accelerometer.acceleration().addRouteAsync(new RouteBuilder() {
+                                         @Override
+                                         public void configure(RouteComponent source) {
+                                             source.stream(new Subscriber() {
+                                                 @Override
+                                                 public void apply(Data data, Object... env) {
+                                                     String accel_entry = String.format("Accel, %s", data.value(Acceleration.class).toString().replaceAll("\\(","").replaceAll("\\)",""));
+                                                     String csv_accel_entry = "Accel,"
+                                                             + String.valueOf(data.value(Acceleration.class).x()) + ","
+                                                             + String.valueOf(data.value(Acceleration.class).y()) + ","
+                                                             + String.valueOf(data.value(Acceleration.class).z());
+                                                     csv_accel_entry.replaceAll("\\(","").replaceAll("\\)","");
+                                                     x.add(data.value(Acceleration.class).x());
+                                                     y.add(data.value(Acceleration.class).y());
+                                                     z.add(data.value(Acceleration.class).z());
+                                                     float xData = data.value(Acceleration.class).x();
+                                                     float yData = data.value(Acceleration.class).y();
+                                                     float zData = data.value(Acceleration.class).z();
+                                                     averageData = (xData + yData + zData) / 3;
+                                                     List<Float> counter = new ArrayList<>();
+                                                     List<Float> test = new ArrayList<>();
+                                                     test.add(averageData);
+                                                     int buffer = 0;
+                                                     float base_line = 0;
+                                                     //
+                                                     Log.i(LOG_TAG, "x: " + Integer.toString(x.size()));
+
+                                                     //if( x.size() == N_SAMPLES)
+                                                     //    mwBoard.getModule(Haptic.class).startBuzzer((short) 1000);
+                                                     if (base_line == 0 && x.size() < 600) {
+                                                         Log.i(LOG_TAG, "On Vibrate perform test rep at normal speed.");
+                                                         if (x.size() == 400 & test.size() != 200){
+                                                             mwBoard.getModule(Haptic.class).startBuzzer((short) 1000);
+                                                             while(test.size() != 200){
+                                                                 test.add(yData);
+                                                                 //int index = test.indexOf(Collections.min(test));
+                                                                 base_line = test.get(test.indexOf(Collections.min(test)));
+                                                             }
+                                                         }
+
+                                                     }
+
+                                                     if(base_line != 0)
+                                                         Log.i(LOG_TAG, "Base line: " + Float.toString(base_line));
+                                                 }
+                                             });
+                                         }
+                                     }).continueWith(new Continuation<Route, Void>() {
+                                         @Override
+                                         public Void then(Task<Route> task) throws Exception {
+                                             accelerometer.acceleration().start();
+                                             accelerometer.start();
+                                             return null;
+                                         }
+                                     });
+
+
+
+
+                                     if( counter.size() > 200 && xData*.100 <= base_line*100){
+                                                                 //Log.i(LOG_TAG, "TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT");
+                                                                 List<Float> accel = new ArrayList<>();
+                                                                 //Log.i(LOG_TAG, "           Size of x: ");
+                                                                 if(x.size() > 200){
+                                                                     for( int i =0; i < x.size(); i += 2)
+                                                                         x.remove(i);
+                                                                 }
+                                                                 if(y.size() > 200){
+                                                                     for( int i =0; i < y.size(); i += 2)
+                                                                         y.remove(i);
+                                                                 }
+                                                                 if(z.size() > 200){
+                                                                     for( int i =0; i < z.size(); i += 2)
+                                                                         z.remove(i);
+                                                                 }
+                                                                 if(x.size() < 200)
+                                                                     x.add(x.get(x.size() - 1));
+                                                                 if(y.size() < 200)
+                                                                     y.add(y.get(y.size() - 1));
+                                                                 if(z.size() < 200)
+                                                                     z.add(z.get(z.size() - 1));
+                                                                 accel.addAll(x);
+                                                                 accel.addAll(y);
+                                                                 accel.addAll(z);
+                                                                 data_array = toFloatArray(accel);
+                                                                 float[] data_array = toFloatArray(accel);
+
+                                                                 //Log.i(LOG_TAG, "fegvfrev      " + Arrays.toString(toFloatArray(accel)));
+
+                                                                 results = classifier.predictProbabilities(data_array);
+                                                                 if(round(results[4], 2) >= 0.75)
+
+
+
+
+
+
+                          mwBoard = ((BtleService.LocalBinder) service).getMetaWearBoard(settings.getBtDevice());
+                                  accelerometer= mwBoard.getModule(Accelerometer.class);
+                                  dataProc = mwBoard.getModule(DataProcessor.class);
+                                  //gyroscope = mwBoard.getModule(GyroBmi160.class);
+                                  magnetometer = mwBoard.getModule(MagnetometerBmm150.class);
+                                  sensorFusion = mwBoard.getModule(SensorFusionBosch.class);
+                                  gpio = mwBoard.getModule(Gpio.class);
+                                  adc = gpio.pin((byte) 0).analogAdc();
+                                  timer = mwBoard.getModule(Timer.class);
+                                  ledModule = mwBoard.getModule(Led.class);
+                                  switchModule = mwBoard.getModule(Switch.class);
+                                  boolean done = false;
+                                  //float base = getBaseLineStart(mwBoard);
+                                  //Log.i(LOG_TAG, "Baseline: " + Float.toString(baseLineStart));
+                                  //
+                                  if ((switchModule= mwBoard.getModule(Switch.class)) != null) {
+                                      Route oldSwitchRoute;
+                                      if ((oldSwitchRoute = mwBoard.lookupRoute(switchRouteId)) != null) {
+                                          oldSwitchRoute.remove();
+                                      }
+
+                                      switchModule.state().addRouteAsync(source ->
+                                              source.stream((data, env) -> this.getActivity().runOnUiThread(() -> {
+                                                  newButtonState = data.value(Boolean.class);
+                                                  if (newButtonState == Boolean.TRUE && oldButtonState == Boolean.FALSE){
+                                                      if (n == 0){
+
+                                                          configureChannel(ledModule.editPattern(Led.Color.GREEN));
+                                                          ledModule.play();
+                                                          int delay = 0;
+                                                          //mwBoard.getModule(Haptic.class).startBuzzer((short) 3000);
+                                                          Log.i(LOG_TAG, "Pressed");
+                                                          Log.i(LOG_TAG, "Button State: " + data.value(Boolean.class));
+                                                          n = 1;
+                                                          //float start = getBaseLineStart(mwBoard);
+                                                          //Log.i(LOG_TAG, "Base is: " + Float.toString(start));
+                                                          while(delay != 4)
+                                                              delay++;
+                                                          mwBoard.getModule(Haptic.class).startBuzzer((short) 1000);
+                                                          nextActivity(activities);
+                                                          /*latRaiseDone = false;
+                                                          if(latRaiseDone == false)
+                                                              latRaise(mwBoard);
+                                                          else
+                                                              Log.i(LOG_TAG, "DONE");*/
+
+                                                          // GPIO Stream
+                                                          adc.addRouteAsync(new RouteBuilder() {
+                                                              @Override
+                                                              public void configure(RouteComponent source) {
+                                                                  source.stream(new Subscriber() {
+                                                                      @Override
+                                                                      public void apply(Data data, Object ... env) {
+
+                                                                          //Log.i(LOG_TAG, "adc = " + data.value(Short.class));
+                                                                          //CSV CODE
+                                                                          String gpio_entry = String.format("Gpio, %s", data.value(Short.class).toString().replaceAll("\\(","").replaceAll("\\)",""));
+                                                                          String csv_gpio_entry = "Gpio," + String.valueOf(data.value(Short.class));
+                                                                          csv_gpio_entry.replaceAll("\\(","").replaceAll("\\)","");
+                                                                          OutputStream out;
+                                                                          try {
+                                                                              outGpio = new BufferedOutputStream(new FileOutputStream(pathGpio, true));
+                                                                              //Log.e(LOG_TAG, "CSV Created");
+                                                                              //out.write(value.x(),);
+                                                                              outGpio.write(csv_gpio_entry.getBytes());
+                                                                              outGpio.write("\n".getBytes());
+                                                                              outGpio.close();
+                                                                          } catch (Exception e) {
+                                                                              Log.e(LOG_TAG, "CSV creation error", e);
+                                                                          }
+                                                                      }
+                                                                  });
+                                                              }
+                                                          }).continueWithTask(task -> {
+                                                              return timer.scheduleAsync(100, false, adc::read);
+                                                          }).continueWith(task -> {
+                                                              scheduledTask = task.getResult();
+                                                              scheduledTask.start();
+                                                              return null;
+                                                          });
+                                                      } else{
+                                                          Log.i(LOG_TAG, "Stopped");
+                                                          accelerometer.acceleration().stop();
+                                                          accelerometer.stop();
+                                                          magnetometer.magneticField().stop();
+                                                          magnetometer.stop();
+                                                          ///scheduledTask.stop();
+                                                          ledModule.stop(true);
+                                                          mwBoard.getModule(Haptic.class).startBuzzer((short) 1000);
+                                                          x.clear();
+                                                          y.clear();
+                                                          z.clear();
+                                                          delay = 0;
+                                                          //results = classifier.predictProbabilities(data_array);
+                                                          n = 0;
+
+                                                      }
+                                                  }
+                                              }))
+                                      ).continueWith(task -> switchRouteId = task.getResult().id());
+                                  }
+                                  // Set Magnetometer Configuration
+                                  accelerometer.configure()
+                                          .odr(50f)       // Set sampling frequency to 25Hz, or closest valid ODR
+                                          .range(8f)      // Set data range to +/-4g, or closet valid range
+                                          .commit();
+
+
+
+if(condition == true){
+
+                                        Log.i(LOG_TAG, "TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT");
+                                        List<Float> accel = new ArrayList<>();
+                                        //Log.i(LOG_TAG, "           Size of x: ");
+                                        if(x.size() > 200){
+                                            for( int i =0; i < x.size(); i += 2)
+                                                x.remove(i);
+                                        }
+                                        if(y.size() > 200){
+                                            for( int i =0; i < y.size(); i += 2)
+                                                y.remove(i);
+                                        }
+                                        if(z.size() > 200){
+                                            for( int i =0; i < z.size(); i += 2)
+                                                z.remove(i);
+                                        }
+                                        if(x.size() < 200)
+                                            x.add(x.get(x.size() - 1));
+                                        if(y.size() < 200)
+                                            y.add(y.get(y.size() - 1));
+                                        if(z.size() < 200)
+                                            z.add(z.get(z.size() - 1));
+                                        accel.addAll(x);
+                                        accel.addAll(y);
+                                        accel.addAll(z);
+                                        data_array = toFloatArray(accel);
+                                        float[] data_array = toFloatArray(accel);
+
+                                        //Log.i(LOG_TAG, "fegvfrev      " + Arrays.toString(toFloatArray(accel)));
+
+                                        results = classifier.predictProbabilities(data_array);
+                                        if(round(results[2], 2) >= 0.10)
+                                            reps++;
+
+                                        if(reps == maxReps){
+                                            sets++;
+                                            reps = 0;
+                                        }
+                                        if(sets == maxSets + 1){
+                                            latRaiseDone = true;
+                                            activities[0] = 1;
+                                            accelerometer.packedAcceleration().stop();
+                                            accelerometer.stop();
+                                            nextActivity(activities);
+                                            return;
+                                        }
+                                        sensorMsg(Integer.toString(reps), "rep");
+                                        sensorMsg(Integer.toString(sets), "set");
+                                        sensorMsg(Float.toString(round(results[2], 2)), "latRaise");
+                                        x.clear();
+                                        y.clear();
+                                        z.clear();
+                                        accel.clear();
+                                        condition = false;
+                                    }

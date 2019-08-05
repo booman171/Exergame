@@ -1,0 +1,152 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent">
+
+
+<LinearLayout
+    android:orientation="vertical"
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent">
+    
+    <com.mbientlab.metawear.tutorial.exergame.FieldView
+      android:id="@+id/fieldView"
+      android:layout_width="fill_parent"
+      android:layout_height="fill_parent"
+      android:layout_weight="1"/>
+      
+      <LinearLayout 
+      	android:orientation="horizontal"
+      	android:layout_width="fill_parent"
+      	android:layout_height="wrap_content"
+      	android:layout_weight="1">
+      	
+        <TextView
+            android:text="@string/level_initial"
+            android:id="@+id/levelText"
+            android:layout_width="wrap_content"
+            android:layout_height="fill_parent"
+            android:includeFontPadding="true"
+            android:lines="2"
+            android:layout_weight="1"/>
+        
+        <TextView
+            android:text="@string/lives_initial"
+            android:id="@+id/livesText"
+            android:layout_width="wrap_content"
+            android:layout_height="fill_parent"
+            android:includeFontPadding="true"
+            android:lines="2"
+            android:layout_weight="1"/>
+
+          <TextView
+              android:text="Signal: 0"
+              android:id="@+id/signalText"
+              android:layout_width="wrap_content"
+              android:layout_height="fill_parent"
+              android:includeFontPadding="true"
+              android:lines="2"
+              android:layout_weight="1"/>
+
+          <TextView
+              android:text="Med: 0"
+              android:id="@+id/medText"
+              android:layout_width="wrap_content"
+              android:layout_height="fill_parent"
+              android:includeFontPadding="true"
+              android:lines="2"
+              android:layout_weight="1"/>
+      </LinearLayout>
+</LinearLayout>
+
+<LinearLayout
+    android:id="@+id/menuView"
+    android:orientation="vertical"
+    android:gravity="center"
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent">
+
+    <LinearLayout
+        android:layout_width="wrap_content"
+        android:layout_height="248dp"
+        android:background="#8448"
+        android:gravity="center"
+        android:orientation="vertical"
+        android:padding="5px">
+
+        <TextView
+            android:id="@+id/statusText"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:padding="5px"
+            android:text="Welcome to Dodge!" />
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:gravity="center"
+            android:orientation="horizontal"
+            android:padding="5px">
+
+            <Button
+                android:id="@+id/newGameButton"
+                android:layout_width="fill_parent"
+                android:layout_height="61dp"
+                android:text="New Game" />
+
+            <Button
+                android:id="@+id/freePlayButton"
+                android:layout_width="fill_parent"
+                android:layout_height="fill_parent"
+                android:text="Free Play" />
+
+            <Button
+                android:id="@+id/aboutButton"
+                android:layout_width="72dp"
+                android:layout_height="fill_parent"
+                android:text="About" />
+
+            <Button
+                android:id="@+id/connectMindWave"
+                android:layout_width="fill_parent"
+                android:layout_height="fill_parent"
+                android:text="Connect" />
+
+        </LinearLayout>
+
+        <TableLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content">
+
+            <TableRow android:id="@+id/bestLevelView">
+
+                <TextView
+                    android:gravity="right"
+                    android:text="@string/best_level" />
+
+                <TextView android:id="@+id/bestLevelText" />
+            </TableRow>
+
+            <TableRow android:id="@+id/bestFreePlayLevelView">
+
+                <TextView
+                    android:gravity="right"
+                    android:text="@string/best_free_play_level" />
+
+                <TextView android:id="@+id/bestFreePlayLevelText" />
+            </TableRow>
+        </TableLayout>
+
+        <Button
+            android:id="@+id/continueFreePlayButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:gravity="center"
+            android:text="Continue Free Play" />
+
+    </LinearLayout>
+    
+</LinearLayout>
+
+</FrameLayout>
