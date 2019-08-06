@@ -1,11 +1,13 @@
 # Exergame
 
-Android app for use with the MetaMotionR or MetaMotionC wearable device from mbientlab and the Mindwave Mobile from NeuroSky.
+This Android app uses an wireless IMU (motion tracker) and ECG (brainwave sensor) as input, via bluetooth, in to a mobile game. Using the IMU, the player's physical motion to control the ship is ran through a trained Tensorflow model to infer which exercise motion is being performed. The trained model recognizes 5 activities, including 4 upper body exercises and rest. The ECG sensor is used to replensih the shields of the player's ship by using the calmness algorithm to break a set threshold.
+
+## Devices
+The app connects to the MetaMotionR or MetaMotionC wearable device from mbientlab and the Mindwave Mobile from NeuroSky.
 
 https://mbientlab.com/metamotionc/
 
 https://store.neurosky.com/pages/mindwave
-
 
 
 ## Building blocks
